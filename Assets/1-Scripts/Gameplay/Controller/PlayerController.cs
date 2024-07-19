@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -31,7 +32,6 @@ namespace SN.MetaVerse
 
         private float _xRotation = 0f;
         private bool _isIdle = true;
-        private bool _isRunning = false;
         private bool _isWalking = false;
         private bool _isJumping = false;
         private bool _isDancing = false;
@@ -63,12 +63,26 @@ namespace SN.MetaVerse
             _isMoving = _controller.velocity.magnitude > 0;
             if (Input.GetKeyDown(KeyCode.RightShift))
             {
-                _isDancing = true;
+                _isDancing = !_isDancing;
+
+                if (_isDancing)
+                {
+                    _playerState = _dance;
+                    _playerState.OnChangedState();
+
+                }
             }
-            if (Input.GetKeyDown(KeyCode.Space) && _groundedPlayer)
+            else if (Input.GetKeyDown(KeyCode.Space) && _groundedPlayer)
             {
                 _playerVelocity.y += playerSettings.jumpHeight;
                 _isJumping = true;
+                ChangePlayerState(_jump);
+            }
+            if (_controller.velocity.y <= 0 && _isJumping)
+            {
+                _isJumping = false;
+                ChangePlayerState(_idle);
+
             }
             HandleMouseLook();
             _move = HandleMovement();
@@ -130,52 +144,31 @@ namespace SN.MetaVerse
         {
             if (_groundedPlayer)
             {
-                if (_isJumping)
-                {
-                    _playerState = _jump;
-                    _isJumping = false;
 
-                }
-                else if (_isDancing)
-                {
-                    _playerState = _dance;
-                    _isDancing = false;
-                }
-                else if (move.magnitude > 0)
+                if (_isDancing || _isJumping) return;
+
+                if (move.magnitude > 0)
                 {
                     if (_isSprinting)
                     {
-                        if (!_isRunning)
-                        {
-                            _playerState = _run;
-                            _isRunning = true;
-                            _isWalking = false;
-                            _isIdle = false;
-                        }
+                        ChangePlayerState(_run);
+                        return;
                     }
-                    else
-                    {
-                        if (!_isWalking)
-                        {
-                            _playerState = _walk;
-                            _isWalking = true;
-                            _isRunning = false;
-                            _isIdle = false;
-                        }
-                    }
+
+                    ChangePlayerState(_walk);
+                    return;
+
                 }
-                else
-                {
-                    if (!_isIdle)
-                    {
-                        _playerState = _idle;
-                        _isIdle = true;
-                        _isWalking = false;
-                        _isRunning = false;
-                    }
-                }
+
+                ChangePlayerState(_idle);
+                return;
             }
 
+        }
+
+        private void ChangePlayerState(in IPlayerState toChange)
+        {
+            _playerState = toChange;
             _playerState.OnChangedState();
         }
     }

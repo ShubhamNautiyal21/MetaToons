@@ -34,7 +34,9 @@ namespace SN.MetaVerse
 
         void OnDance()
         {
+
             _animator.Play("dance");
+
         }
         void OnIdle()
         {
