@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SN.MetaVerse
 {
-
     [RequireComponent(typeof(Animator))]
     public class AnimationController : MonoBehaviour
     {
